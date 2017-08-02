@@ -5,7 +5,7 @@ pullMongo() {
 }
 pullDrops() {
         local version="$1"
-        docker pull cses/drops:$version
+        docker pull vivaconagua/drops:$version
 }
 
 startMongo(){
@@ -14,7 +14,7 @@ startMongo(){
 
 startDrops(){
 local version="$1"
-docker run --name drops --link drops-mongo:mongo --restart=unless-stopped -v $(pwd)/drops.informatik.hu-berlin.de.p12:/certs.p12 -h drops.informatik.hu-berlin.de -p 443:9443 cses/drops:$version \
+docker run --name drops --link drops-mongo:mongo --restart=unless-stopped -v $(pwd)/drops.informatik.hu-berlin.de.p12:/certs.p12 -h drops.informatik.hu-berlin.de -p 443:9443 vivaconagua/drops:$version \
     -Dconfig.resource=drops.informatik.hu-berlin.de.conf \
     -Dhttps.port=9443 \
     -Dhttps.address=drops.informatik.hu-berlin.de \
