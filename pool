@@ -1,0 +1,97 @@
+#!/bin/bash
+
+pullMongo() {
+        docker pull mongo
+}
+pullDrops() {
+        local version="$1"
+        docker pull cses/drops:$version
+}
+
+startMongo(){
+        docker run --name drops-mongo --restart=unless-stopped -d mongo
+}
+
+startDrops(){
+local version="$1"
+docker run --name drops --link drops-mongo:mongo --restart=unless-stopped -v $(pwd)/drops.informatik.hu-berlin.de.p12:/certs.p12 -h drops.informatik.hu-berlin.de -p 443:9443 cses/drops:$version \
+    -Dconfig.resource=drops.informatik.hu-berlin.de.conf \
+    -Dhttps.port=9443 \
+    -Dhttps.address=drops.informatik.hu-berlin.de \
+    -Dhttp.address=drops.informatik.hu-berlin.de \
+    -Dhttp.port=disabled \
+    -Dplay.server.https.keyStore.path=/certs.p12 \
+    -Dplay.server.https.keyStore.type=PKCS12 \
+    -Dplay.server.https.keyStore.password=<TODO: Password> \
+    -Dmongodb.uri=mongodb://mongo/drops \
+    -J-Xms128M -J-Xmx512m -J-server \
+    > server-output 2>&1 &
+}
+
+stopDrops() {
+        docker stop drops
+}
+
+stopMongo() {
+        docker stop drops-mongo
+}
+
+rmMongo() {
+        docker rm drops-mongo
+}
+
+rmDrops() {
+        docker rm drops
+}
+
+missingMethod() {
+        echo "Usage: $0 method"
+        exit 1
+}
+
+notValidMethod() {
+        echo "Usage: Given method is unknown."
+        exit 1
+}
+
+missingVersionNumber() {
+        echo "Usage: Version number is needed as a second parameter."
+        exit 1
+}
+
+# invoke  missingMethod
+# call missingMethod() function if method name not supplied
+[[ $# -eq 0 ]] && missingMethod
+
+case "$1" in
+"install")
+        [[ $# -eq 1 ]] && missingVersionNumber
+        pullMongo
+        pullDrops "$2"
+        ;;
+"start")
+        [[ $# -eq 1 ]] && missingVersionNumber
+        startMongo
+        startDrops "$2"
+        ;;
+"stop")
+        stopDrops
+        stopMongo
+        ;;
+"remove")
+        rmDrops
+        rmMongo
+        ;;
+"update")
+        [[ $# -eq 1 ]] && missingVersionNumber
+        pullDrops "$2"
+        stopDrops
+        rmDrops
+        startDrops "$2"
+        ;;
+"start-drops")
+        [[ $# -eq 1 ]] && missingVersionNumber
+        startDrops "$2"
+        ;;
+*)
+esac
