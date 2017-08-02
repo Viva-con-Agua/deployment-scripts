@@ -94,4 +94,6 @@ case "$1" in
         startDrops "$2"
         ;;
 *)
+        notValidMethod
+        ;;
 esac
